@@ -112,3 +112,39 @@ impl KeyLookup {
         })
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const KEY: &str = "known/key";
+
+    const NEIGHBORS: [&str; 5] = [
+        "known/key_a",
+        "known/key_b",
+        "known/key_c",
+        "known/key_seven",
+        "known/key_six6",
+    ];
+
+    #[test]
+    fn key_lookup() {
+        let hashes = NEIGHBORS.map(|s| crate::hash::mmh64a(s.as_bytes()));
+        let lookup = KeyLookup::new(&hashes);
+
+        let key = KEY;
+        let mut map = std::collections::HashMap::new();
+        for (hash, tail) in lookup.find_neighbors(key.as_bytes()) {
+            let neighbor = format!("{}{}",
+                &key[..key.len() - key.len() % 8],
+                tail.as_str());
+            map.insert(neighbor, hash);
+        }
+
+        assert!(map.len() == NEIGHBORS.len());
+        for neighbor in NEIGHBORS {
+            let hash = map.get(neighbor).unwrap();
+            assert_eq!(*hash, crate::hash::mmh64a(neighbor.as_bytes()));
+        }
+    }
+}
