@@ -1,5 +1,6 @@
 use std::process::ExitCode;
 
+mod filter;
 mod hash;
 mod lookup;
 
