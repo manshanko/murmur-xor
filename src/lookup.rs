@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub struct KeyTail([u8; 8]);
 
 impl KeyTail {
@@ -56,11 +54,12 @@ impl KeyHash {
     }
 }
 
-pub struct KeyLookup(HashMap<KeyHash, Vec<u64>>);
+pub struct KeyLookup(crate::hash::MurmurHashMap<KeyHash, Vec<u64>>);
 
 impl KeyLookup {
     pub fn new(hashes: &[u64]) -> Self {
-        let mut lookup = HashMap::with_capacity(hashes.len() * 7);
+        let mut lookup = crate::hash::MurmurHashMap::default();
+        lookup.reserve(hashes.len() * 7);
         for hash in hashes {
             for key in KeyHash::from_hash(*hash) {
                 let entry = lookup.entry(key).or_insert(Vec::new());

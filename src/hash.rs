@@ -88,3 +88,48 @@ pub fn mmh64a_undo_end(mut hash: u64) -> u64 {
     hash = hash.wrapping_mul(MAGIC_INVERSE);
     hash
 }
+
+pub type MurmurHashMap<K, V> = std::collections::HashMap<K, V, MurmurState>;
+
+pub struct MurmurState;
+
+impl std::hash::BuildHasher for MurmurState {
+    type Hasher = MurmurHasher;
+
+    #[inline]
+    fn build_hasher(&self) -> MurmurHasher {
+        const STATE: u64 = 8_u64.wrapping_mul(MAGIC);
+
+        MurmurHasher(STATE)
+    }
+}
+
+impl Default for MurmurState {
+    fn default() -> Self {
+        MurmurState
+    }
+}
+
+pub struct MurmurHasher(u64);
+
+impl std::hash::Hasher for MurmurHasher {
+    fn write(&mut self, _bytes: &[u8]) { unreachable!(); }
+
+    #[inline]
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    #[inline]
+    fn write_u64(&mut self, mut k: u64) {
+        k = k.wrapping_mul(MAGIC);
+        k ^= k >> ROLL;
+        k = k.wrapping_mul(MAGIC);
+
+        self.0 ^= k;
+        self.0 = self.0.wrapping_mul(MAGIC);
+        self.0 ^= self.0 >> ROLL;
+        self.0 = self.0.wrapping_mul(MAGIC);
+        self.0 ^= self.0 >> ROLL;
+    }
+}
